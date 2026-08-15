@@ -1,6 +1,17 @@
+import { useState} from 'react'
 import './App.css'
 
 function App() {
+  const [formState, setFormState] = useState('Temperature') 
+
+  const uvHandler = () => setFormState('UV')
+  const tempHandler = () => setFormState('Temperature')
+  const weatherHandler = () => setFormState('Weather Conditions')
+  const formHandler = (event) => {
+    event.preventDefault()
+  }
+
+
   const getCity = async () => {
     const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=Berlin&count=1&language=en&format=json`)
     const possibleLocations = await locationResponse.json()
@@ -13,12 +24,15 @@ function App() {
     <>
       <div>
         <form>
-          <input type="text"/> 
+          <input type="text" onSubmit={formHandler}/> 
           <button type="submit">Search</button>
         </form>
-        <button>Temperature 🌡️</button>
-        <button>Weather Condition 🌥️</button>
-        <button>UV Index ☀️</button>
+        <button onClick={tempHandler}>Temperature 🌡️</button>
+        <button onClick={weatherHandler}>Weather Condition 🌥️</button>
+        <button onClick={uvHandler}>UV Index ☀️</button>
+        <div>
+          {formState == 'UV' ? 'yes' : 'no'}
+        </div>
       </div>
     </>
   )
