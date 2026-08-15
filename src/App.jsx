@@ -12,7 +12,13 @@ function App() {
   return (
     <>
       <div>
-        Hello World
+        <form>
+          <input type="text"/> 
+          <button type="submit">Search</button>
+        </form>
+        <button>Temperature 🌡️</button>
+        <button>Weather Condition 🌥️</button>
+        <button>UV Index ☀️</button>
       </div>
     </>
   )
