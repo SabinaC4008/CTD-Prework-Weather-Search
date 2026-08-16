@@ -1,51 +1,82 @@
 import {useState} from 'react'
 
 function App() {
-  const [formState, setFormState] = useState('Temperature') 
-  const [city, setCity] = useState('')
-  const [locationInfo, setlocationInfo] = useState('')
-  const [info, setInfo] = useState('')
-  const [alertInfo, setAlertInfo]  = useState('')
+  const [formState, setFormState] = useState('Temperature');
+  const [city, setCity] = useState('');
+  const [locationInfo, setlocationInfo] = useState('');
+  const [info, setInfo] = useState('');
+  const [alertInfo, setAlertInfo]  = useState('');
+
+  const weatherCodeMapping = {
+    0: 'Clear Sky', 
+    1: 'Mainly Clear', 
+    2: 'Partly Cloudy',
+    3: 'Overcast', 
+    45:'Fog', 
+    48: 'Depositing Rime Fog', 
+    51: 'Light Drizzle',
+    53: 'Moderate Drizzle',
+    55: 'Dense Drizzle',
+    56: 'Light Freezing Drizzle', 
+    57: 'Dense Freezing Drizzle',
+    61: 'Slight Rain',
+    63: 'Moderate Rain', 
+    65: 'Heavey Rain', 
+    66: 'Light Freezing Rain', 
+    67: 'Heavy Freezing Rain', 
+    71: 'Slight Snow Fall', 
+    73: 'Moderate Snow Fall', 
+    75: 'Heavy Snow Fall', 
+    77: 'Snow Grains', 
+    80: 'Slight Rain Showers', 
+    81: 'Moderate Rain Showers', 
+    82: 'Violent Rain Showers', 
+    85: 'Slight Snow Showers', 
+    86: 'Heavy Snow Showers', 
+    95: 'Thunderstorm', 
+    96: 'Thunderstorm with Slight Hail', 
+    99: 'Thunderstorm with Heavy Hail'
+  }
 
 
   //Button Handlers 
   const uvHandler = () => {
-    setFormState('UV Index')
+    setFormState('UV Index');
     if (locationInfo){
-      getUV(locationInfo)
+      getUV(locationInfo);
     }
   }
 
   const tempHandler = () => {
-    setFormState('Temperature')
+    setFormState('Temperature');
     if (locationInfo){
-      getTemperature(locationInfo)
+      getTemperature(locationInfo);
     }
   }
 
   const weatherHandler = () => {
-    setFormState('Weather Conditions')
+    setFormState('Weather Conditions');
     if (locationInfo){
-      getWeather(locationInfo)  
+      getWeather(locationInfo);
     }
   }
 
   const cityHandler = (event) => setCity(event.target.value)
   
   const searchHandler = async (event) => {
-    event.preventDefault()
-    getWeatherState(formState)
+    event.preventDefault();
+    getWeatherState(formState);
   }
 
   const getWeatherState = async (infoToGet) => {
-    const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`)
-    const possibleLocations = await locationResponse.json() //need to check for latitude, longitude, name and timezone
-    console.log(possibleLocations)
-    //const location = possibleLocations.results[0]
+    const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+    const possibleLocations = await locationResponse.json(); //need to check for latitude, longitude, name and timezone
+    console.log(possibleLocations);
+    //const location = possibleLocations.results[0];
     try {
-      const location = possibleLocations.results[0]
-      //console.log(location)
-      setlocationInfo(location)
+      const location = possibleLocations.results[0];
+      //console.log(location);
+      setlocationInfo(location);
 
       //Selecting which info to return right now
       if(infoToGet == 'Temperature') {
@@ -75,7 +106,14 @@ function App() {
     const weather = await weatherResponse.json()
     //console.log('Temperature')
     console.log(weather.current.temperature_2m)
-    setInfo("Current temperature of the city " + location.name + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m)
+    let locationStructure; 
+    if(location.country == 'United States'){
+      locationStructure = location.name + ', ' + location.admin1; 
+    } else {
+      locationStructure = location.name;
+    }
+    setInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m)
+    setAlertInfo(false)
   }
 
   //Function for fetching UV
@@ -84,7 +122,13 @@ function App() {
     const weather = await weatherResponse.json()
     //console.log('UV')
     console.log(weather.daily.uv_index_max[0])
-    setInfo("Today's max UV level of the city " + location.name + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0])
+    let locationStructure; 
+    if(location.country == 'United States'){
+      locationStructure = location.name + ', ' + location.admin1; 
+    } else {
+      locationStructure = location.name;
+    }
+    setInfo("Today's max UV level of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0])
     if(weather.daily.uv_index_max[0] > 3){
       setAlertInfo(true)
     } else {
@@ -98,7 +142,15 @@ function App() {
     const weather = await weatherResponse.json()
     //console.log('Weather Conditions')
     //console.log(weather.current.weather_code)
-    setInfo("Current Weather Conditions are: " + location.name + " in the country of " + location.country + " is: " + weather.current.weather_code)
+    const weatherNum = weather.current.weather_code;
+    let locationStructure; 
+    if(location.country == 'United States'){
+      locationStructure = location.name + ', ' + location.admin1; 
+    } else {
+      locationStructure = location.name;
+    }
+    setInfo("Current Weather Conditions are: " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum])
+    setAlertInfo(false)
   }
 
   return (
