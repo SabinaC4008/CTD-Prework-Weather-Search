@@ -1,5 +1,13 @@
 body{
-  background-color: orange;
+  background-color: rgb(224, 147, 2);
   color: navy;
   font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+button {
+  border-radius: 12%;
+  margin: 1rem;
 }
