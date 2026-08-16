@@ -7,6 +7,7 @@ function App() {
   const [info, setInfo] = useState('');
   const [alertInfo, setAlertInfo]  = useState('');
 
+  //Mapping weather code to string descriptor as found on open meteo
   const weatherCodeMapping = {
     0: 'Clear Sky', 
     1: 'Mainly Clear', 
@@ -36,7 +37,7 @@ function App() {
     95: 'Thunderstorm', 
     96: 'Thunderstorm with Slight Hail', 
     99: 'Thunderstorm with Heavy Hail'
-  }
+  };
 
 
   //Button Handlers 
@@ -80,86 +81,77 @@ function App() {
 
       //Selecting which info to return right now
       if(infoToGet == 'Temperature') {
-        getTemperature(location)
+        getTemperature(location);
       }
       if(infoToGet == 'UV Index') {
-        getUV(location)
+        getUV(location);
       }
       if(infoToGet == 'Weather Conditions') {
-        getWeather(location)
+        getWeather(location);
       }
     } catch (error) {
       if (error.name === 'TypeError')
-        setInfo('City was not found. Please make sure city name is spelled correct.')
+        setInfo('City was not found. Please make sure city name is spelled correct.');
     }
   }
 
 
 
 
+  //Function to get location with State when location is in the US just to clarify when cities have the same name
+  //This function makes the code within each of of the functions below a bit tidier
+  const getFullLocationName = (location) => {
+    if(location.country == 'United States'){
+      return location.name + ', ' + location.admin1; 
+    } else {
+      return location.name;
+    }
+  }
 
   //Functions for getting individual info
   //Function for fetching Temperature
   const getTemperature = async (location) => {
-    console.log(location)
-    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m&timezone=${location.timezone}&forecast_days=1`)
-    const weather = await weatherResponse.json()
-    //console.log('Temperature')
-    console.log(weather.current.temperature_2m)
-    let locationStructure; 
-    if(location.country == 'United States'){
-      locationStructure = location.name + ', ' + location.admin1; 
-    } else {
-      locationStructure = location.name;
-    }
-    setInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m)
-    setAlertInfo(false)
+    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m&timezone=${location.timezone}&forecast_days=1`);
+    const weather = await weatherResponse.json();
+    //console.log('Temperature');
+    //console.log(weather.current.temperature_2m);
+    const locationStructure = getFullLocationName(location)
+    setInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m);
+    setAlertInfo(false);
   }
 
   //Function for fetching UV
   const getUV = async (location) => {
-    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=uv_index_max&timezone=${location.timezone}&forecast_days=1`)
-    const weather = await weatherResponse.json()
-    //console.log('UV')
-    console.log(weather.daily.uv_index_max[0])
-    let locationStructure; 
-    if(location.country == 'United States'){
-      locationStructure = location.name + ', ' + location.admin1; 
-    } else {
-      locationStructure = location.name;
-    }
-    setInfo("Today's max UV level of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0])
+    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=uv_index_max&timezone=${location.timezone}&forecast_days=1`);
+    const weather = await weatherResponse.json();
+    //console.log('UV');
+    //console.log(weather.daily.uv_index_max[0]);
+    const locationStructure = getFullLocationName(location)
+    setInfo("Today's max UV level of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0]);
     if(weather.daily.uv_index_max[0] > 3){
-      setAlertInfo(true)
+      setAlertInfo(true);
     } else {
-      setAlertInfo(false)
+      setAlertInfo(false);
     }
   }
 
   //Function for fetching Weather Code 
   const getWeather = async (location) => {
-    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=weather_code&timezone=${location.timezone}&forecast_days=1`)
-    const weather = await weatherResponse.json()
-    //console.log('Weather Conditions')
-    //console.log(weather.current.weather_code)
+    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=weather_code&timezone=${location.timezone}&forecast_days=1`);
+    const weather = await weatherResponse.json();
+    //console.log('Weather Conditions');
+    //console.log(weather.current.weather_code);
     const weatherNum = weather.current.weather_code;
-    let locationStructure; 
-    if(location.country == 'United States'){
-      locationStructure = location.name + ', ' + location.admin1; 
-    } else {
-      locationStructure = location.name;
-    }
-    setInfo("Current Weather Conditions are: " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum])
-    setAlertInfo(false)
+    const locationStructure = getFullLocationName(location)
+    setInfo("Current weather conditions of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum]);
+    setAlertInfo(false);
   }
 
   return (
     <>
       <div className='main-container'>
         <h1>Weather Search Platform</h1>
-        <div>
-          You are currently searching for: {formState}
-        </div>
+        <h2>You are currently searching for: {formState}</h2>
         <form onSubmit={searchHandler}>
           <input type="text" onChange={cityHandler}/> 
           <button type="submit">Search</button>
@@ -167,6 +159,7 @@ function App() {
         <button onClick={tempHandler}>Temperature 🌡️</button>
         <button onClick={weatherHandler}>Weather Condition 🌥️</button>
         <button onClick={uvHandler}>UV Index ☀️</button>
+        
         <div>
           {info}
           {alertInfo && <div className='uv-alert'>Max UV Level is predicted to get past 3, make sure to have sunscreen on hand!</div>}
