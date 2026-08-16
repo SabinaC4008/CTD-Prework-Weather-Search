@@ -1,10 +1,11 @@
-import { useState} from 'react'
+import {useState} from 'react'
 
 function App() {
   const [formState, setFormState] = useState('Temperature') 
   const [city, setCity] = useState('')
   const [locationInfo, setlocationInfo] = useState('')
   const [info, setInfo] = useState('')
+  //const [additonalInfo, setadditonalInfo]  = useState('')
 
 
   //Button Handlers 
@@ -38,23 +39,34 @@ function App() {
 
   const getWeatherState = async (infoToGet) => {
     const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`)
-    const possibleLocations = await locationResponse.json()
-    const location = possibleLocations.results[0]
-    console.log(location)
-    setlocationInfo(location)
+    const possibleLocations = await locationResponse.json() //need to check for latitude, longitude, name and timezone
+    console.log(possibleLocations)
+    //const location = possibleLocations.results[0]
+    try {
+      const location = possibleLocations.results[0]
+      //console.log(location)
+      setlocationInfo(location)
 
-    //Selecting which info to return right now
-    if(infoToGet == 'Temperature') {
-      getTemperature(location)
-    }
-    if(infoToGet == 'UV') {
-      getUV(location)
-    }
-    if(infoToGet == 'Weather Conditions') {
-      getWeather(location)
-    }
 
+
+      //Selecting which info to return right now
+      if(infoToGet == 'Temperature') {
+        getTemperature(location)
+      }
+      if(infoToGet == 'UV Index') {
+        getUV(location)
+      }
+      if(infoToGet == 'Weather Conditions') {
+        getWeather(location)
+      }
+    } catch (error) {
+      if (error.name === 'TypeError')
+        setInfo('City was not found. Please make sure city name is spelled correct.')
+    }
   }
+
+
+
 
 
   //Functions for getting individual info
@@ -65,7 +77,7 @@ function App() {
     const weather = await weatherResponse.json()
     //console.log('Temperature')
     //console.log(weather.current.temperature_2m)
-    setInfo("Current temperature is: " + weather.current.temperature_2m)
+    setInfo("Current temperature of the city " + location.name + " in the country of " + location.country + " is: " + weather.current.temperature_2m)
   }
 
   //Function for fetching UV
@@ -73,8 +85,9 @@ function App() {
     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=uv_index_max&timezone=${location.timezone}&forecast_days=1`)
     const weather = await weatherResponse.json()
     //console.log('UV')
-    //console.log(weather.daily.uv_index_max[0])
-    setInfo("Current UV levels are: " + weather.daily.uv_index_max[0])
+    console.log(weather.daily.uv_index_max[0])
+    setInfo("Today's max UV level of the city " + location.name + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0])
+    //setadditonalInfo(<div className='Notification'>UV Index will get past 3, keep sunscreen on hand!</div>)
   }
 
   //Function for fetching Weather Code 
@@ -83,15 +96,15 @@ function App() {
     const weather = await weatherResponse.json()
     //console.log('Weather Conditions')
     //console.log(weather.current.weather_code)
-    setInfo(" Current Weather Conditions are: " + weather.current.weather_code)
+    setInfo("Current Weather Conditions are: " + location.name + " in the country of " + location.country + " is: " + weather.current.weather_code)
   }
 
   return (
     <>
       <div className='main-container'>
-        Weather Search Platform
+        <h1>Weather Search Platform</h1>
         <div>
-          {formState}
+          You are currently searching for: {formState}
         </div>
         <form onSubmit={searchHandler}>
           <input type="text" onChange={cityHandler}/> 
