@@ -1,11 +1,11 @@
 import {useState} from 'react'
 
 function App() {
-  const [formState, setFormState] = useState('Temperature');
-  const [city, setCity] = useState('');
-  const [locationInfo, setlocationInfo] = useState('');
+  const [requestedInfoType, setRequestedInfoType] = useState('Temperature');
+  const [inputCity, setInputCity] = useState(''); //holds the city being entered into the search bar
+  const [apiReturnedLocationInfo, setApiReturnedLocationInfo] = useState(''); //holds the first result returned by fetch request for city
   const [info, setInfo] = useState('');
-  const [alertInfo, setAlertInfo]  = useState('');
+  const [uvAlertInfo, setUVAlertInfo]  = useState('');
 
   //Mapping weather code to string descriptor as found on open meteo
   const weatherCodeMapping = {
@@ -40,53 +40,54 @@ function App() {
   };
 
 
+
+
+
+
   //Button Handlers 
   const uvHandler = () => {
-    setFormState('UV Index');
-    if (locationInfo){
-      getUV(locationInfo);
+    setRequestedInfoType('UV Index');
+    if (apiReturnedLocationInfo){
+      getUV(apiReturnedLocationInfo);
     }
   }
 
   const tempHandler = () => {
-    setFormState('Temperature');
-    if (locationInfo){
-      getTemperature(locationInfo);
+    setRequestedInfoType('Temperature');
+    if (apiReturnedLocationInfo){
+      getTemperature(apiReturnedLocationInfo);
     }
   }
 
   const weatherHandler = () => {
-    setFormState('Weather Conditions');
-    if (locationInfo){
-      getWeather(locationInfo);
+    setRequestedInfoType('Weather Conditions');
+    if (apiReturnedLocationInfo){
+      getWeather(apiReturnedLocationInfo);
     }
   }
 
-  const cityHandler = (event) => setCity(event.target.value)
+  const cityInputHandler = (event) => setInputCity(event.target.value)
   
   const searchHandler = async (event) => {
     event.preventDefault();
-    getWeatherState(formState);
-  }
 
-  const getWeatherState = async (infoToGet) => {
-    const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+    const locationResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${inputCity}&count=1&language=en&format=json`);
     const possibleLocations = await locationResponse.json(); //need to check for latitude, longitude, name and timezone
     console.log(possibleLocations);
     //const location = possibleLocations.results[0];
     try {
       const location = possibleLocations.results[0];
       //console.log(location);
-      setlocationInfo(location);
+      setApiReturnedLocationInfo(location);
 
       //Selecting which info to return right now
-      if(infoToGet == 'Temperature') {
+      if(requestedInfoType == 'Temperature') {
         getTemperature(location);
       }
-      if(infoToGet == 'UV Index') {
+      if(requestedInfoType == 'UV Index') {
         getUV(location);
       }
-      if(infoToGet == 'Weather Conditions') {
+      if(requestedInfoType == 'Weather Conditions') {
         getWeather(location);
       }
     } catch (error) {
@@ -100,11 +101,11 @@ function App() {
 
   //Function to get location with State when location is in the US just to clarify when cities have the same name
   //This function makes the code within each of of the functions below a bit tidier
-  const getFullLocationName = (location) => {
-    if(location.country == 'United States'){
-      return location.name + ', ' + location.admin1; 
+  const addStateIfUS = (orginalLocation) => {
+    if(orginalLocation.country == 'United States'){
+      return orginalLocation.name + ', ' + orginalLocation.admin1; 
     } else {
-      return location.name;
+      return orginalLocation.name;
     }
   }
 
@@ -115,9 +116,9 @@ function App() {
     const weather = await weatherResponse.json();
     //console.log('Temperature');
     //console.log(weather.current.temperature_2m);
-    const locationStructure = getFullLocationName(location)
+    const locationStructure = addStateIfUS(location)
     setInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m);
-    setAlertInfo(false);
+    setUVAlertInfo(false);
   }
 
   //Function for fetching UV
@@ -126,12 +127,12 @@ function App() {
     const weather = await weatherResponse.json();
     //console.log('UV');
     //console.log(weather.daily.uv_index_max[0]);
-    const locationStructure = getFullLocationName(location)
+    const locationStructure = addStateIfUS(location)
     setInfo("Today's max UV level of the city " + locationStructure + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0]);
     if(weather.daily.uv_index_max[0] > 3){
-      setAlertInfo(true);
+      setUVAlertInfo(true);
     } else {
-      setAlertInfo(false);
+      setUVAlertInfo(false);
     }
   }
 
@@ -142,18 +143,18 @@ function App() {
     //console.log('Weather Conditions');
     //console.log(weather.current.weather_code);
     const weatherNum = weather.current.weather_code;
-    const locationStructure = getFullLocationName(location)
+    const locationStructure = addStateIfUS(location)
     setInfo("Current weather conditions of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum]);
-    setAlertInfo(false);
+    setUVAlertInfo(false);
   }
 
   return (
     <>
       <div className='main-container'>
         <h1>Weather Search Platform</h1>
-        <h2>You are currently searching for: {formState}</h2>
+        <h2>You are currently searching for: {requestedInfoType}</h2>
         <form onSubmit={searchHandler}>
-          <input type="text" onChange={cityHandler}/> 
+          <input type="text" onChange={cityInputHandler}/> 
           <button type="submit">Search</button>
         </form>
         <button onClick={tempHandler}>Temperature 🌡️</button>
@@ -161,8 +162,8 @@ function App() {
         <button onClick={uvHandler}>UV Index ☀️</button>
         
         <div>
-          {info}
-          {alertInfo && <div className='uv-alert'>Max UV Level is predicted to get past 3, make sure to have sunscreen on hand!</div>}
+          <p>{info}</p>
+          {uvAlertInfo && <div className='uv-alert'><p>Max UV Level is predicted to get past 3, make sure to have sunscreen on hand!</p></div>}
         </div>
       </div>
     </>
