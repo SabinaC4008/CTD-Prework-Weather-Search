@@ -5,12 +5,12 @@ function App() {
   const [city, setCity] = useState('')
   const [locationInfo, setlocationInfo] = useState('')
   const [info, setInfo] = useState('')
-  //const [additonalInfo, setadditonalInfo]  = useState('')
+  const [alertInfo, setAlertInfo]  = useState('')
 
 
   //Button Handlers 
   const uvHandler = () => {
-    setFormState('UV')
+    setFormState('UV Index')
     if (locationInfo){
       getUV(locationInfo)
     }
@@ -47,8 +47,6 @@ function App() {
       //console.log(location)
       setlocationInfo(location)
 
-
-
       //Selecting which info to return right now
       if(infoToGet == 'Temperature') {
         getTemperature(location)
@@ -76,8 +74,8 @@ function App() {
     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m&timezone=${location.timezone}&forecast_days=1`)
     const weather = await weatherResponse.json()
     //console.log('Temperature')
-    //console.log(weather.current.temperature_2m)
-    setInfo("Current temperature of the city " + location.name + " in the country of " + location.country + " is: " + weather.current.temperature_2m)
+    console.log(weather.current.temperature_2m)
+    setInfo("Current temperature of the city " + location.name + " in the country of " + location.country + " is: " + weather.current.temperature_2m + weather.current_units.temperature_2m)
   }
 
   //Function for fetching UV
@@ -87,7 +85,11 @@ function App() {
     //console.log('UV')
     console.log(weather.daily.uv_index_max[0])
     setInfo("Today's max UV level of the city " + location.name + " in the country of " + location.country + " is: " + weather.daily.uv_index_max[0])
-    //setadditonalInfo(<div className='Notification'>UV Index will get past 3, keep sunscreen on hand!</div>)
+    if(weather.daily.uv_index_max[0] > 3){
+      setAlertInfo(true)
+    } else {
+      setAlertInfo(false)
+    }
   }
 
   //Function for fetching Weather Code 
@@ -115,6 +117,7 @@ function App() {
         <button onClick={uvHandler}>UV Index ☀️</button>
         <div>
           {info}
+          {alertInfo && <div className='uv-alert'>Max UV Level is predicted to get past 3, make sure to have sunscreen on hand!</div>}
         </div>
       </div>
     </>
