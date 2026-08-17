@@ -43,6 +43,9 @@ h2{
   font-size: 1.5rem;
 }
 
+h3{
+  font-size: 1.35rem;
+}
 div{
   margin: 1rem;
 }
@@ -55,4 +58,15 @@ div{
   background-color: rgb(255, 252, 55);
   margin-top: 2rem;
   border-style: solid;
+}
+
+.city-alert{
+  border: 2px;
+  padding: 0.25rem;
+  border-radius: 1.5rem;
+  color: black;
+  background-color: rgb(136, 42, 42);
+  margin-top: 2rem;
+  border-style: solid;
+  font-size: 1rem;
 }
