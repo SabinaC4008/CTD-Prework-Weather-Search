@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState} from 'react';
 
 function App() {
   const [requestedInfoType, setRequestedInfoType] = useState('Temperature'); //Holds the current information type being requested
@@ -94,8 +94,10 @@ function App() {
       if(requestedInfoType == 'Weather Conditions') {
         getWeatherCode(location);
       }
-
-      if ((location.name).toLowerCase() != inputCity.toLowerCase()){
+      let cityHolderForComparision = inputCity;
+      cityHolderForComparision = cityHolderForComparision.replace(' ', ''); //get rid of spaces
+      const cityHolderArray = cityHolderForComparision.split(',') //split the inputCity to city and country/state
+      if ((location.name).toLowerCase() != cityHolderArray[0].toLowerCase()){ // compare to the first part of the array with the city name only
         setCityNameMatchAlert(true);
       } else {
         setCityNameMatchAlert(false);
@@ -182,7 +184,7 @@ function App() {
 
           {cityNameMatchAlert && <div className='city-alert'>
               <h3>Your entered city name and your resulting city name do not match!</h3>
-              <p> If you didn't get the city you intended, please make sure you get the spelling as close as possible to the city you wanted to see. For more specification, the search can also take in the country or state that the city is in after a comma.</p>
+              <p> If you didn't get the city you intended, please make sure you get the spelling as close as possible to the city you wanted to see. For more specification, the search can also take in the country(full name) or state(abbreviation) that the city is in after a comma.</p>
             </div>
           }
         </div>
