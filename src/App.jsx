@@ -1,10 +1,10 @@
 import {useState} from 'react'
 
 function App() {
-  const [requestedInfoType, setRequestedInfoType] = useState('Temperature');
+  const [requestedInfoType, setRequestedInfoType] = useState('Temperature'); //Holds the current information type being requested
   const [inputCity, setInputCity] = useState(''); //holds the city being entered into the search bar
   const [apiReturnedLocationInfo, setApiReturnedLocationInfo] = useState(''); //holds the first result returned by fetch request for city
-  const [info, setInfo] = useState(''); //info returned by API
+  const [displayInfo, setDisplayInfo] = useState(''); //info returned by API
   const [uvAlertInfo, setUVAlertInfo]  = useState(false); //indicates if UV info should be displayed or not
   const [cityNameMatchAlert, setCityNameMatchAlert]  = useState(false);
 
@@ -95,16 +95,19 @@ function App() {
         getWeatherCode(location);
       }
 
-      if (location.name != inputCity){
+      if ((location.name).toLowerCase() != inputCity.toLowerCase()){
         setCityNameMatchAlert(true);
       } else {
         setCityNameMatchAlert(false);
       }
     } catch (error) {
       if (error.name === 'TypeError')
-        setInfo('City was not found. Please make sure city name is spelled correct.');
+        setDisplayInfo('City was not found. Please make sure city name is spelled correct.');
     }
   }
+
+
+
 
 
   //Function to get location with State when location is in the US just to clarify when cities have the same name
@@ -117,16 +120,15 @@ function App() {
     }
   }
 
-  //Functions for getting individual info
+  //Functions below are for getting individual info: Temperature, Weather Condition, and Max UV Index
+
   //Function for fetching Temperature
   const getTemperature = async (location) => {
     //End-Point 1
     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m&timezone=${location.timezone}&forecast_days=1`);
     const weatherResponseResult = await weatherResponse.json();
-    //console.log('Temperature');
-    //console.log(weather.current.temperature_2m);
     const locationStructure = addStateIfUS(location);
-    setInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherResponseResult.current.temperature_2m + weatherResponseResult.current_units.temperature_2m);
+    setDisplayInfo("Current temperature of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherResponseResult.current.temperature_2m + weatherResponseResult.current_units.temperature_2m);
     setUVAlertInfo(false);
   }
 
@@ -135,10 +137,8 @@ function App() {
      //End-Point 2
     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&daily=uv_index_max&timezone=${location.timezone}&forecast_days=1`);
     const weatherResponseResult = await weatherResponse.json();
-    //console.log('UV');
-    //console.log(weather.daily.uv_index_max[0]);
     const locationStructure = addStateIfUS(location);
-    setInfo("Today's max UV level in the city " + locationStructure + " in the country of " + location.country + " is: " + weatherResponseResult.daily.uv_index_max[0]);
+    setDisplayInfo("Today's max UV level in the city " + locationStructure + " in the country of " + location.country + " is: " + weatherResponseResult.daily.uv_index_max[0]);
     if(weatherResponseResult.daily.uv_index_max[0] > 3){
       setUVAlertInfo(true);
     } else {
@@ -151,11 +151,9 @@ function App() {
      //End-Point 3
     const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=weather_code&timezone=${location.timezone}&forecast_days=1`);
     const weatherResponseResult = await weatherResponse.json();
-    //console.log('Weather Conditions');
-    //console.log(weather.current.weather_code);
-    const weatherNum = weatherResponseResult.current.weather_code;
+    const weatherNum = weatherResponseResult.current.weather_code; //Convert to string Weather Condition
     const locationStructure = addStateIfUS(location);
-    setInfo("Current weather conditions of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum]);
+    setDisplayInfo("Current weather conditions of the city " + locationStructure + " in the country of " + location.country + " is: " + weatherCodeMapping[weatherNum]);
     setUVAlertInfo(false);
   }
 
@@ -164,23 +162,27 @@ function App() {
       <div className='main-container'>
         <h1>Weather Search Platform</h1>
         <h2>You are currently searching for: {requestedInfoType}</h2>
+        
         <form onSubmit={searchHandler}>
           <input type="text" onChange={cityInputHandler}/> 
           <button type="submit">Search</button>
         </form>
+
         <button onClick={temperatureHandler}>Temperature 🌡️</button>
         <button onClick={weatherCodeHandler}>Weather Condition 🌥️</button>
         <button onClick={uvHandler}>UV Index ☀️</button>
         
         <div>
-          <p>{info}</p>
+          <p>{displayInfo}</p>
+
           {uvAlertInfo && <div className='uv-alert'>
               <p>Max UV Level is predicted to get past 3, make sure to have sunscreen on hand!</p>
             </div>
           }
+
           {cityNameMatchAlert && <div className='city-alert'>
               <h3>Your entered city name and your resulting city name do not match!</h3>
-              <p> If you didn't get the city you intended, please make sure you get the spelling as close as possible to the city you wanted to see. For more specification, the search can also take in the country or state the city is in after a comma.</p>
+              <p> If you didn't get the city you intended, please make sure you get the spelling as close as possible to the city you wanted to see. For more specification, the search can also take in the country or state that the city is in after a comma.</p>
             </div>
           }
         </div>
